@@ -4,27 +4,53 @@ package Dictcmd;
 
 use strict;
 use warnings;
-
-use WWW::Babelfish;
+use OnlineRequest;
+use constant FILE => "../en-de.ISO-8859-1.vok";
 
 use feature "say";
 
+require Exporter;
+our @ISA = qw(Exporter);
+our @EXPORT = qw(
+take_the_file
+search_word
+);
 
-my $babel_obj = new WWW::Babelfish( service => 'Yahoo', 
-    agent => 'Mozilla/13.0');
-
-
-sub de_en($)
+sub take_the_file
 {
-    my $de_word = shift;
-    my $en_word = $babel_obj->translate(
-        'source' => 'German',
-        'destination' => 'English',
-        'text' => $de_word,
-        'delimiter' => "\n\t",
-        'ofh' => \*STDOUT,
-    );
-    return $en_word;
+    my $fh;
+    my @content_list = ();
+    if ( -f  FILE ) {
+        open $fh, "<", FILE || warn qq/cannot open file $!/;
+        while ( <$fh> ) {
+            chomp($_);
+            push @content_list, $_;
+        }
+        close $fh || warn qq/cannot close file $!/;
+    }
+    else {
+        warn qq/no translation file found ... switching to online mode/;
+    }
+    return \@content_list;
+}
+
+sub search_word($)
+{
+    my $regex = shift;
+    my @results = ();
+    my $ref_file_content = &take_the_file;
+    @results = grep {/$regex/i} @{$ref_file_content};
+    return @results;
+}
+
+sub write_back($)
+{
+    my $ref_file_content = shift;
+    my $fh;
+    open $fh, ">", FILE || warn qq/cannot opne file $!/;
+    print {$fh} $_ for (@{$ref_file_content});
+    close $fh || warn qq/cannot close file $!/;
+    return;
 }
 
 1;
