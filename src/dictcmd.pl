@@ -72,12 +72,12 @@ sub online_mode
 
 sub offline_mode
 {
-    &take_the_file;
     my @list = search_word($pattern);
     return @list;
 }
 
 # Formatted output of the results 
+# not sure whether this is the solution
 sub print_results(@)
 {
     my @list = @_;
@@ -87,10 +87,12 @@ sub print_results(@)
     my $formatted;
     for (@list) {
         ($english, $german) = split( ' : ', $_);
+        if ( (length($english) > 38 ) || (length($german) > 38 ) ) {
+            # skip lines which are to long
+            next;
+        }
         #write;
-        #   printf("%-20s\t\t\t\t%s\n", $english, $german);
-        $formatted = sprintf("%-38s %-38s\n", $english, $german);
-        print $formatted;
+        printf("%38s\t%-38s\n", $english, $german);
     }
 format OUTPUT_TOP = 
 English                                 German
