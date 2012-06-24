@@ -76,14 +76,11 @@ sub offline_mode
     return @list;
 }
 
-# Formatted output of the results 
-# not sure whether this is the solution
+# Formatted output of the results, not perfect but readable
 sub print_results(@)
 {
     my @list = @_;
     my ($german, $english) = 0;
-    $~ = "OUTPUT";
-    $^ = "OUTPUT_TOP";
     my $formatted;
     for (@list) {
         ($english, $german) = split( ' : ', $_);
@@ -91,17 +88,8 @@ sub print_results(@)
             # skip lines which are to long
             next;
         }
-        #write;
         printf("%38s\t%-38s\n", $english, $german);
     }
-format OUTPUT_TOP = 
-English                                 German
----------------------------------------------------------------------
-.
-format OUTPUT =
-~@<<<<<<<<<<<<<<<<<<<<<<<<<<<         ~@<<<<<<<<<<<<<<<<<<<<<<<<<<<
-$english, $german
-.
 }
 
 
@@ -110,7 +98,15 @@ if ( $help ) { &usage; }
 sub usage 
 {
 my $helpstring = <<"ENDHELP";
-here comes some comments how to use this tool
+dictcmd OPTION SEARCHITEM
+
+-de2en
+-de the given word is a german one and you want to search the english equivalent.
+-en2de
+-en the given word is a english one and you want to search the german equivalent.
+-online use only online search 
+-offline use only offline search in the en-de.ISO-8859-1.vok file
+
 ENDHELP
     
     say $helpstring;
@@ -118,5 +114,13 @@ ENDHELP
 }
 
 
-
 __END__
+
+=pod
+
+=head1 NAME
+dictcmd - for easily translation from your commandline
+
+=head1 DESCRIPTION
+
+=cut

@@ -12,11 +12,14 @@ use feature "say";
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(
-take_the_file
-search_word
+        search_word
 );
 
-sub take_the_file
+our @EXPORT_OK = qw(
+    _take_the_file
+);
+
+sub _take_the_file
 {
     my $fh;
     my @content_list = ();
@@ -38,7 +41,7 @@ sub search_word($)
 {
     my $regex = shift;
     my @results = ();
-    my $ref_file_content = &take_the_file;
+    my $ref_file_content = &_take_the_file;
     @results = grep {/$regex/i} @{$ref_file_content};
     return @results;
 }

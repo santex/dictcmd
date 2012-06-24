@@ -10,3 +10,13 @@ dictcmd - commandline dictionary
 
 In the current state it is just an idea. ;)
 more ...comming soon...
+
+=head1 TODO
+
+=over 2
+
+=item merge procedure to expand the offline database
+
+=item precise word search
+
+=back

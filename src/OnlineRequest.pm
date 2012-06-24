@@ -14,15 +14,10 @@ require Exporter;
 our @ISA = qw(Exporter);
 
 our @EXPORT = qw(
-online_request
-parse_online_result
+    parse_online_result
+    online_request
 );
 
-
-# TODO
-# extra module for filehandling and double colon seperated input und output
-# so only this module must be replace by changing of another persistence
-# interface
 
 sub online_request($)
 {
@@ -44,14 +39,17 @@ sub parse_online_result($)
     my @result_list = ();
     for my $i ( 0 .. $#{$ref} ) {
         for my $j ( 0 .. $#{$ref->[$i]->{data}} ) {
-            if ( $ref->[$i]->{data}->[$j]->{left} eq '' 
-                || $ref->[$i]->{data}->[$j]->{right} eq '' ) {
-                next;
-            }
-            else {
-                push @result_list, join ' : ', 
-                 $ref->[$i]->{data}->[$j]->{left}, 
-                 $ref->[$i]->{data}->[$j]->{right};
+            if ( $ref->[$i]->{data}->[$j]->{left} &&
+                $ref->[$i]->{data}->[$j]->{left} ) {
+                if ( $ref->[$i]->{data}->[$j]->{left} eq '' 
+                    || $ref->[$i]->{data}->[$j]->{right} eq '' ) {
+                    next;
+                }
+                else {
+                    push @result_list, join ' : ', 
+                    $ref->[$i]->{data}->[$j]->{left}, 
+                    $ref->[$i]->{data}->[$j]->{right};
+                }
             }
         }
     }
