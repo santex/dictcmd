@@ -18,7 +18,7 @@ our @EXPORT = qw(
     online_request
 );
 
-
+# execute the online request by leo.org 
 sub online_request($)
 {
     my $word = shift;

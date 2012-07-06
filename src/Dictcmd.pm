@@ -4,7 +4,6 @@ package Dictcmd;
 
 use strict;
 use warnings;
-use OnlineRequest;
 use constant FILE => "../en-de.ISO-8859-1.vok";
 
 use feature "say";
@@ -18,6 +17,8 @@ our @EXPORT = qw(
 our @EXPORT_OK = qw(
     _take_the_file
 );
+
+our $VERSION = 0.1;
 
 sub _take_the_file
 {
