@@ -10,6 +10,8 @@ BEGIN
     use_ok("Dictcmd")
 }
 
+require_ok("dictcmd.pl");
+
 my $pattern = qr(^\w+? : \w*?genial\w*?$);
 my @searched_words = search_word($pattern);
 my @compare_array = (
@@ -20,6 +22,7 @@ my @compare_array = (
 
 is_deeply(\@searched_words, \@compare_array, "arrays equal");
 
+=pod
 sub compute_differences
 {
     my (@union, @intersection, @differences) = ();
@@ -27,10 +30,10 @@ sub compute_differences
     my @tmp1 = &offline_mode;
     my @tmp2 = &online_mode;
     foreach my $elements (@tmp1, @tmp2) {
-        $count{$lements}++;
+        $count{$elements}++;
     }
     foreach my $elements (keys %count) {
-        push @union, $elements
+        push @union, $elements;
         push @{ $count{$elements} > 1 ? \@intersection : \@differences }, $elements;
     }
 
@@ -42,4 +45,6 @@ sub compute_differences
         say $union[$i];
     }
 }
+=cut
 
+&compute_differences;

@@ -12,6 +12,7 @@ sub online_mode;
 sub offline_mode;
 sub pretty_printer(\@);
 sub print_results(@);
+sub sort_precise(\@);
 sub compute_differences(\@\@);
 sub usage;
 
@@ -24,7 +25,7 @@ GetOptions(
     'help' => \$help,
 );
 
-our $term = 0;
+our $term = '';
 our @result_list = ();
 our $pattern = qr(^.*?$term.*?$);
 
@@ -46,39 +47,56 @@ our $pattern = qr(^.*?$term.*?$);
 
 # Mode decision
     if ( $offline ) {
-        no OnlineRequest;
+#        no OnlineRequest; namespace::clean ?
         @result_list = &offline_mode;
     }
     elsif ( $online ) {
-        no Dictcmd;
+#        no Dictcmd;
         @result_list = &online_mode;
     }
     else {
+        # create threads todo both
         my @tmp_1 = ();
         my @tmp_2 = ();
          @tmp_1 = &offline_mode;
          @tmp_2 = &online_mode;
-         compute_differences(@tmp_1, @tmp_2);
          @result_list = (@tmp_1, @tmp_2);
     }
 }
 
-#pretty_printer(@result_list);
-#print_results(@result_list);
-#&compute_differences;
+pretty_printer(@result_list);
+@result_list = sort_precise(@result_list);
+print_results(@result_list);
+
+sub sort_precise(\@) 
+{
+    my @list = @{ shift() };
+    @list = sort { length($a) <=> length($b) } @list;
+    return @list;
+}
 
 sub pretty_printer(\@)
 {
-    my $su = sub { s/(?:\[.*?\])//g; s/(?:\-\s.*?\:??)//g; s/(?:\(.*?\))//g;
-        s/\s{2,}/ /g; $_;};
+    my $su = sub 
+    { 
+        s/(?:\[.*?\])//g;
+        s/(?:\-\s.*?\:??)//g;
+        s/(?:\(.*?\))//g;
+        s/\s{2,}/ /g;
+        $_;
+    };
     map { $su->($_) } @{shift()};
 }
+
+=pod
+
 sub compute_differences(\@\@)
 {
     my (@union, @intersection, @differences) = ();
     my %count = ();
     my @tmp1 = @{ shift() };
     my @tmp2 = @{ shift() };
+
     foreach my $elements (@tmp1, @tmp2) {
         $count{$elements}++;
     }
@@ -111,6 +129,8 @@ sub compute_differences(\@\@)
     }
 }
 
+=cut
+
 sub online_mode
 {
     my $ref_res = online_request($term);
@@ -130,8 +150,8 @@ sub print_results(@)
     my @list = @_;
     my ($german, $english) = 0;
     my $formatted;
-    for (@list) {
-        ($english, $german) = split( ' : ', $_);
+    for ( my $n = 0; $n < 15; $n++ ) {
+        ($english, $german) = split( ' : ', $list[$n]);
         if ( (length($english) > 38 ) || (length($german) > 38 ) ) {
             # skip lines which are to long
             next;

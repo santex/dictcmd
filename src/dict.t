@@ -2,10 +2,8 @@ use strict;
 use warnings;
 use Test::More 'no_plan';
 use feature "say";
+use Data::Dumper;
 
-#use lib "../src";
-
-#require_ok("dictcmd.pl");
 
 my @test_data = (
 "intersection : Schnittpunkt",
@@ -125,9 +123,19 @@ sub pretty_printer(\@)
 
 pretty_printer(@test_data);
 
-for my $j ( 0 .. $#test_data ) {
-    say $test_data[$j];
-}
-#for my $i ( 0 .. $#result_data ) {
-#    say $result_data[$i];
+#for my $j ( 0 .. $#test_data ) {
+#    say $test_data[$j];
 #}
+
+our $term = 'intersection';
+
+sub sort_precise(\@) 
+{
+    my @list = @{ shift() };
+    @list = sort { length($a) <=> length($b) } @list;
+    return @list;
+}
+
+my @result = sort_precise(@test_data);
+say Dumper($_) for (@result);
+
