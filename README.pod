@@ -18,16 +18,15 @@ multithreading.
 
 =head1 SYNOPSIS
 
-dictcmd OPTION SEARCHITEM
+    dictcmd OPTION SEARCHITEM
 
-=over 6
 
-=item -de2en
-=item -de the given word is a german one and you want to search the english equivalent.
-=item -en2de
-=item -en the given word is a english one and you want to search the german equivalent.
-=item -online use only online search 
-=item -offline use only offline search in the en-de.ISO-8859-1.vok file
+    -de2en
+    -de the given word is a german one and you want to search the english equivalent.
+    -en2de
+    -en the given word is a english one and you want to search the german equivalent.
+    -online use only online search 
+    -offline use only offline search in the en-de.ISO-8859-1.vok file
 
 =back
 
