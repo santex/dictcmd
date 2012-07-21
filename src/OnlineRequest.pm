@@ -13,12 +13,19 @@ require Exporter;
 
 our @ISA = qw(Exporter);
 
+our $VERSION = 0.1;
+
 our @EXPORT = qw(
     parse_online_result
     online_request
 );
 
-# execute the online request by leo.org 
+# 
+# Getting the searched word as parameter 
+# and executes the search after on the leo.org
+# dictionary service.
+# Returns a reference on an complex datastructure.
+#
 sub online_request($)
 {
     my $word = shift;
@@ -31,8 +38,12 @@ sub online_request($)
     return \@matches;
 }
 
-# parse the data structure and returns a double colon seperatet list for
-# output
+#
+# Getting a reference on the complex datastructure which 
+# contains the search results. 
+# Parse the relevant data in an colon seperated list.
+# These list will be returned.
+#
 sub parse_online_result($)
 {
     my $ref = shift;
@@ -59,3 +70,19 @@ sub parse_online_result($)
 
 1;
 __END__
+
+=pod
+
+=head1 NAME
+
+OnlineRequest.pm Module for handling the online search.
+
+=head2 DESCRIPTION
+
+This module is the interface to the WWW it will search after a word
+in the online database of the dictionary service L<www.leo.org>
+The result of the search is a complex data structure which will be parsed in
+an ':' colon separeted list to simplify futher operations on it.
+
+=cut
+

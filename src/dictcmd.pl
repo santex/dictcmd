@@ -2,20 +2,35 @@
 
 use strict;
 use warnings;
+use Config;
 use Getopt::Long;
 use OnlineRequest;
 use Dictcmd;
 
 use feature "say";
 
+#
+# load thread support if exists
+#
+BEGIN
+{
+  if ( $Config{useithreads} ) {
+    use threads;
+  }
+}
+
 sub online_mode;
 sub offline_mode;
 sub pretty_printer(\@);
 sub print_results(@);
 sub sort_precise(\@);
-sub compute_differences(\@\@);
+sub output(@);
 sub usage;
 
+#
+# Initialize the commandline argument processing
+# by using the Getopt::Long module.
+#
 my ($de_en, $en_de, $offline, $online, $help) = 0;
 GetOptions(
     'de|de2en' => \$de_en,
@@ -25,6 +40,12 @@ GetOptions(
     'help' => \$help,
 );
 
+#
+# Global Variables:
+# $term ist the raw word what we search for
+# @result_list is the list were we push our results in
+# $pattern ist the regular expression for the offline search
+#
 our $term = '';
 our @result_list = ();
 our $pattern = qr(^.*?$term.*?$);
@@ -47,27 +68,66 @@ our $pattern = qr(^.*?$term.*?$);
 
 # Mode decision
     if ( $offline ) {
-#        no OnlineRequest; namespace::clean ?
         @result_list = &offline_mode;
     }
     elsif ( $online ) {
-#        no Dictcmd;
         @result_list = &online_mode;
     }
     else {
-        # create threads todo both
         my @tmp_1 = ();
         my @tmp_2 = ();
-         @tmp_1 = &offline_mode;
-         @tmp_2 = &online_mode;
-         @result_list = (@tmp_1, @tmp_2);
+
+        if ( $Config{useithreads} ) {
+            handle_threads();
+        }
+        else {
+            @tmp_1 = &offline_mode;
+            @tmp_2 = &online_mode;
+            @result_list = (@tmp_1, @tmp_2);
+            output(@result_list);
+        }
     }
 }
 
-pretty_printer(@result_list);
-@result_list = sort_precise(@result_list);
-print_results(@result_list);
+#
+# Thread handling routine here we start two threads, one for the offline
+# request and another for the online request. The master-thread will wait
+# until one of them is joinable, then he takes the result of the thread and
+# calls the routines for output. The he waits until the second thread is ready
+# too.
+#
+sub handle_threads
+{
+  my ( $offline_thr ) = threads->create(\&offline_mode);
+  my ( $online_thr ) = threads->create(\&online_mode);
+    
+  do {
+      if ($offline_thr->is_joinable()) {
+          my @offline_result = $offline_thr->join();
+          output(@offline_result);
+      }
+      if ($online_thr->is_joinable()) {
+          my @online_result = $online_thr->join();
+          output(@online_result);
+      }
+  } while ( threads->list() );
 
+}
+
+#
+# Calls the subroutines to getting a nice output
+#
+sub output(@)
+{
+  my @raw_list = @_;
+  pretty_printer(@raw_list);
+  @raw_list= sort_precise(@raw_list);
+  print_results(@raw_list);
+}
+
+#
+# Sorts the results by the shortest first.
+#
 sub sort_precise(\@) 
 {
     my @list = @{ shift() };
@@ -75,6 +135,9 @@ sub sort_precise(\@)
     return @list;
 }
 
+#
+# This subroutine deletes some ugly features in the list.
+#
 sub pretty_printer(\@)
 {
     my $su = sub 
@@ -88,49 +151,10 @@ sub pretty_printer(\@)
     map { $su->($_) } @{shift()};
 }
 
-=pod
-
-sub compute_differences(\@\@)
-{
-    my (@union, @intersection, @differences) = ();
-    my %count = ();
-    my @tmp1 = @{ shift() };
-    my @tmp2 = @{ shift() };
-
-    foreach my $elements (@tmp1, @tmp2) {
-        $count{$elements}++;
-    }
-    foreach my $elements (keys %count) {
-        push @union, $elements;
-        push @{ $count{$elements} > 1 ? \@intersection : \@differences }, $elements;
-    }
-
-    # test print 
-    print "-"x20;
-    print "\tunion\t";
-    print "-"x20;
-    print "\n";
-    for my $i ( 0 .. $#union ) {
-        say $union[$i];
-    }
-    print "-"x20;
-    print "\tintersection\t";
-    print "-"x20;
-    print "\n";
-    for my $j ( 0 .. $#intersection ) {
-        say $intersection[$j];
-    }
-    print "-"x20;
-    print "\tdifferences\t";
-    print "-"x20;
-    print "\n";
-    for my $m ( 0 .. $#differences ) {
-        say $differences[$m];
-    }
-}
-
-=cut
-
+#
+# Triggers the certain subroutines to make the online request
+# Returns the list which will be returned by the module.
+#
 sub online_mode
 {
     my $ref_res = online_request($term);
@@ -138,19 +162,27 @@ sub online_mode
     return @list;
 }
 
+#
+# Triggers the search routine in the Dictcmd module.
+# Returns the list which will be returned by the module.
+#
 sub offline_mode
 {
     my @list = search_word($pattern);
     return @list;
 }
 
+#
 # Formatted output of the results, not perfect but readable
+# without eyebleeding
+#
 sub print_results(@)
 {
     my @list = @_;
     my ($german, $english) = 0;
-    my $formatted;
-    for ( my $n = 0; $n < 15; $n++ ) {
+    my $limit = ( @list <= 15 ) ? @list : 15 ;
+
+    for ( my $n = 0; $n < $limit; $n++ ) {
         ($english, $german) = split( ' : ', $list[$n]);
         if ( (length($english) > 38 ) || (length($german) > 38 ) ) {
             # skip lines which are to long
@@ -164,7 +196,7 @@ if ( $help ) { &usage; }
 
 sub usage 
 {
-my $helpstring = <<"ENDHELP";
+  my $helpstring = <<"ENDHELP";
 dictcmd OPTION SEARCHITEM
 
 -de2en
@@ -186,8 +218,28 @@ __END__
 =pod
 
 =head1 NAME
-dictcmd - for easily translation from your commandline
+
+dictcmd - for easy  german <-> english translation from your commandline
 
 =head1 DESCRIPTION
+
+This program is for german - english and english - german translation direct
+form your comandline. There are two eventual sources to get your translation.
+The first one is an simple file in your directory, the second one is to make
+an online request to a known dictonary service. You can choose which kind of
+source you ask. Only online, only offline or both (default). If you ask both
+and your perl version has ithreads enabled you get better performance by using 
+multithreading.
+
+=head1 SYNOPSIS
+
+dictcmd OPTION SEARCHITEM
+
+-de2en
+-de the given word is a german one and you want to search the english equivalent.
+-en2de
+-en the given word is a english one and you want to search the german equivalent.
+-online use only online search 
+-offline use only offline search in the en-de.ISO-8859-1.vok file
 
 =cut

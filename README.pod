@@ -4,19 +4,47 @@
 
 =head1 NAME
 
-dictcmd - commandline dictionary 
+dictcmd - an simple german <-> english dictionary for your commandline
 
 =head1 DESCRIPTION
 
-In the current state it is just an idea. ;)
-more ...comming soon...
+This program is for german - english and english - german translation direct
+form your comandline. There are two eventual sources to get your translation.
+The first one is an simple file in your directory, the second one is to make
+an online request to a known dictonary service. You can choose which kind of
+source you ask. Only online, only offline or both (default). If you ask both
+and your perl version has ithreads enabled you get better performance by using 
+multithreading.
+
+=head1 SYNOPSIS
+
+dictcmd OPTION SEARCHITEM
+
+=over 6
+
+=item -de2en
+=item -de the given word is a german one and you want to search the english equivalent.
+=item -en2de
+=item -en the given word is a english one and you want to search the german equivalent.
+=item -online use only online search 
+=item -offline use only offline search in the en-de.ISO-8859-1.vok file
+
+=back
 
 =head1 TODO
 
-=over 2
+=over 5
 
-=item merge procedure to expand the offline database
+=item Output options controllable with confiugration file
 
-=item precise word search
+=item Support for other online dictionary services
+
+=item Refactore the package structure 
+
+=item writing additional tests to provide better stability
+
+=item adding the difference from online and offline output to the file
 
 =back
+
+=cut

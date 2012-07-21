@@ -20,6 +20,11 @@ our @EXPORT_OK = qw(
 
 our $VERSION = 0.1;
 
+#
+# Reads the whole file given by the constant FILE
+# line by line in a list. 
+# Returns a reference to that list.
+#
 sub _take_the_file
 {
     my $fh;
@@ -38,6 +43,11 @@ sub _take_the_file
     return \@content_list;
 }
 
+# 
+# Given scalar parameter is a regular expression.
+# The subroutine will search after that in a given file.
+# Returns a list with the results were the parameter matched.
+#
 sub search_word($)
 {
     my $regex = shift;
@@ -47,6 +57,10 @@ sub search_word($)
     return @results;
 }
 
+=pod 
+# Not in use this time !
+# For writing new words back in the file 
+# this is just a feature for later releases.
 sub write_back($)
 {
     my $ref_file_content = shift;
@@ -56,6 +70,20 @@ sub write_back($)
     close $fh || warn qq/cannot close file $!/;
     return;
 }
+=cut
 
 1;
 __END__
+=pod
+
+=head1 NAME
+
+Dictcmd.pm Module for file handling 
+
+=head1 DESCRIPTION
+
+This module provides the file handling for the offline persistence. 
+In generall it will read the File which is the offline dictionary and 
+search after a regular expression in it. 
+
+=cut
