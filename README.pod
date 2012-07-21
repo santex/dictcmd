@@ -28,8 +28,6 @@ multithreading.
     -online use only online search 
     -offline use only offline search in the en-de.ISO-8859-1.vok file
 
-=back
-
 =head1 TODO
 
 =over 5
