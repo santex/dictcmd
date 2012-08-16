@@ -1,0 +1,11 @@
+Makefile.PL
+README.pod
+dict
+
+t/onlinerequest.t
+t/dictcmd.t
+
+lib/Dictcmd.pm
+lib/OnlineRequest.pm
+
+offline_dict/en-de.ISO-8859-1.vok

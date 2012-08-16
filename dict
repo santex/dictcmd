@@ -168,7 +168,9 @@ sub online_mode
 #
 sub offline_mode
 {
-    my @list = search_word($pattern);
+    my @list = ();
+		my $handle = &getting_offline_resource;
+		@list = search_word($pattern, $handle);
     return @list;
 }
 
@@ -209,7 +211,7 @@ dictcmd OPTION SEARCHITEM
 ENDHELP
     
     say $helpstring;
-#    exit;
+    exit;
 }
 
 1;

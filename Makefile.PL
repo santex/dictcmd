@@ -3,18 +3,33 @@
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
+use File::Copy;
+use Env qw(HOME PWD);
 
-WriteMakefile(
-    NAME                     => 'Dictcmd',
-    VERSION_FROM             => 'src/Dictcmd.pm',
-    PM                       => {
-       'Dictcmd.pm'             => 'src/Dictcmd.pm',
-       'OnlineRequest.pm'    => 'src/OnlineRequest.pm',
-   },
-   PREREQ_PM                 => {
-       'Getopt::Long'        => 0,
-       'WWW::Dict::Leo::Org' => 0,
-   },
+mkdir "$HOME/.dictcmd" or warn qq/creating directory failed/;
+copy("en-de.ISO-8859-1.vok", "$HOME/.dictcmd/") or warn qq/copying failed/;
+
+my %params = (
+	NAME                     => 'Dictcmd',
+	AUTHOR => 'blastmaster',
+	VERSION_FROM             => 'lib/Dictcmd.pm',
+	PREREQ_PM                 => {
+		'Getopt::Long'        => 0,
+		'WWW::Dict::Leo::Org' => 0,
+	},
+	EXE_FILES => [ 'dict' ],
 );
+
+my $mmv = eval $ExtUtils::MakeMaker::VERSION;
+if ( $mmv >= 6.45 ) {
+	$params{META_MERGE} = {
+		resources => {
+			repository => 'git://github.com/blastmaster/dictcmd.git',
+			bugtracker => 'https://github.com/blastmaster/dictcmd/issues',
+		},
+	};
+}
+
+WriteMakefile( %params );
 
 1;

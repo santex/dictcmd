@@ -5,7 +5,7 @@ use Test::More tests => 10;
 
 use feature "say";
 
-use lib "../src";
+use lib "../lib";
 
 BEGIN
 {
