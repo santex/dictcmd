@@ -4,7 +4,6 @@ use strict;
 use warnings;
 use Config;
 use Getopt::Long;
-use OnlineRequest;
 use Dictcmd;
 
 use feature "say";
@@ -15,7 +14,7 @@ use feature "say";
 BEGIN
 {
   if ( $Config{useithreads} ) {
-    use threads;
+      eval 'use threads';
   }
 }
 
@@ -39,6 +38,16 @@ GetOptions(
     'online' => \$online,
     'help' => \$help,
 );
+
+#
+# if the necessary module for OnlineRequests are installed
+# use it, else use everytime the offline resources.
+#
+eval 'use OnlineRequest';
+if ( $@ ) {
+    $offline = 1;
+    $online = undef;
+}
 
 #
 # Global Variables:
@@ -84,9 +93,9 @@ our $pattern = qr(^.*?$term.*?$);
             @tmp_1 = &offline_mode;
             @tmp_2 = &online_mode;
             @result_list = (@tmp_1, @tmp_2);
-            output(@result_list);
         }
     }
+    output(@result_list);
 }
 
 #
@@ -163,14 +172,16 @@ sub online_mode
 }
 
 #
-# Triggers the search routine in the Dictcmd module.
+# takes the handle of the offline resource at first
+# triggers the search routines from Dictcmd.pm, getting 
+# a list which contains the results.
 # Returns the list which will be returned by the module.
 #
 sub offline_mode
 {
     my @list = ();
-		my $handle = &getting_offline_resource;
-		@list = search_word($pattern, $handle);
+    my $handle = &getting_offline_resource;
+    @list = search_word($pattern, $handle);
     return @list;
 }
 
@@ -235,7 +246,7 @@ multithreading.
 
 =head1 SYNOPSIS
 
-dictcmd OPTION SEARCHITEM
+dictcmd <OPTION> <SEARCHITEM>
 
 -de2en
 -de the given word is a german one and you want to search the english equivalent.

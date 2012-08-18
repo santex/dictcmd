@@ -18,8 +18,7 @@ multithreading.
 
 =head1 SYNOPSIS
 
-    dictcmd OPTION SEARCHITEM
-
+    dictcmd <OPTION> <SEARCHITEM>
 
     -de2en
     -de the given word is a german one and you want to search the english equivalent.
@@ -27,6 +26,40 @@ multithreading.
     -en the given word is a english one and you want to search the german equivalent.
     -online use only online search 
     -offline use only offline search in the en-de.ISO-8859-1.vok file
+
+=head1 INSTALLATION
+
+    $ perl Makefile.PL
+    $ make
+    $ make test
+    $ make install
+
+=head1 OPTIONAL REQUIREMENTS
+
+=head2 Online Modus
+
+If you want to use the online search too, you need to install a CPAN Module.:
+B<WWW::Dict::Leo::Org> L<http://search.cpan.org/~tlinden/WWW-Dict-Leo-Org-1.35/Org.pm>
+If you use B<cpanm> type:
+    $ cpanm WWW::Dict::Leo::Org
+
+If you not use B<cpanm> ... you B<should!>
+
+=head2 Thread Support
+
+If you want to use online and offline ressources together it is possible to use this
+with multithread support. To use interpreterthreads in perl you must compile
+them into your perl version. To check if they already compiled in type:
+    
+    $ perl -V | grep ithreads
+    $ #or 
+    $ perl -le 'use Config;$Config{'useithreads'}?print"threads":print"no threads"'
+
+To Compile them in, you must define the thread macro at configure time with:
+
+    $ sh Configure -Dusethreads
+
+Note: B<This little programm runs also fine without threads or online modules!>
 
 =head1 TODO
 

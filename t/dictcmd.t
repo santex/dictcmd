@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More qw( no_plan );
+use Test::More tests => 2;
 
 use lib "../lib";
 
@@ -18,13 +18,20 @@ my @compare_array = (
 );
 
 my $pattern = qr(^\w+? : \w*?genial\w*?$);
-my $con_ref = take_the_file_content(\*DATA);
-
-#my @searched_words = search_word($pattern, $con_ref);
-
-is_deeply($con_ref, \@compare_array, "arrays equal");
+my @searched_words = search_word($pattern, \*DATA);
+is_deeply(\@searched_words, \@compare_array, "arrays equal");
 
 __DATA__
 ingenious : genial
 ingeniously : genial
 ingeniously : geniale
+more instinctive : triebhaftere
+more insufficient : ungenuegendere
+more intelligent : intelligentere
+more intense : intensivere
+more interesting : interessantere
+more intimate : innigere
+more intolerable : unertraeglichere
+more intolerant : intolerantere
+more intractable : unfuegsamere
+

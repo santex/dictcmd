@@ -13,15 +13,15 @@ use feature "say";
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(
-        search_word
-				take_the_file_content
-				getting_offline_resource
+    search_word
+    take_the_file_content
+    getting_offline_resource
 );
 
 our $VERSION = 0.1;
 
+# setting offline resource
 our $filename;
-
 $filename = "$HOME/.dictcmd/".FILE;
 
 #
@@ -42,6 +42,10 @@ sub take_the_file_content($)
 	return \@content_list;
 }
 
+#
+# open the offline resource 
+# returns the filehandle
+#
 sub getting_offline_resource
 {
 	my $handle = do { local *HANDLE };
@@ -57,27 +61,12 @@ sub getting_offline_resource
 sub search_word($$)
 {
     my $regex = shift;
-		my $handle = shift;
+    my $handle = shift;
     my @results = ();
     my $ref_file_content = take_the_file_content($handle);
     @results = grep {/$regex/i} @{$ref_file_content};
     return @results;
 }
-
-=pod 
-# Not in use this time !
-# For writing new words back in the file 
-# this is just a feature for later releases.
-sub write_back($)
-{
-    my $ref_file_content = shift;
-    my $fh;
-    open $fh, ">", FILE || warn qq/cannot opne file $!/;
-    print {$fh} $_ for (@{$ref_file_content});
-    close $fh || warn qq/cannot close file $!/;
-    return;
-}
-=cut
 
 1;
 __END__
