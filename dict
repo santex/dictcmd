@@ -5,20 +5,13 @@ use warnings;
 use Config;
 use Getopt::Long;
 use Dictcmd;
+use if $Config{useithreads}, 'threads';
 
 use feature "say";
 
-#
-# load thread support if exists
-#
-BEGIN
-{
-  if ( $Config{useithreads} ) {
-      eval 'use threads';
-  }
-}
-
-sub online_mode;
+sub main;
+sub processing_args($);
+sub online_mode($);
 sub offline_mode;
 sub pretty_printer(\@);
 sub print_results(@);
@@ -30,10 +23,11 @@ sub usage;
 # Initialize the commandline argument processing
 # by using the Getopt::Long module.
 #
-my ($de_en, $en_de, $offline, $online, $help) = 0;
+my ($de_en, $en_de, $interactive, $offline, $online, $help) = (0, 0, 0, 0, 0, 0);
 GetOptions(
     'de|de2en' => \$de_en,
     'en|en2de' => \$en_de,
+    'i|interactive' => \$interactive,
     'offline' => \$offline,
     'online' => \$online,
     'help' => \$help,
@@ -42,6 +36,7 @@ GetOptions(
 #
 # if the necessary module for OnlineRequests are installed
 # use it, else use everytime the offline resources.
+# ATTENTION !!! UNDEF IN $online COULD RESULTS IN PROBLEMS BY TOGGLE MODE
 #
 eval 'use OnlineRequest';
 if ( $@ ) {
@@ -49,22 +44,80 @@ if ( $@ ) {
     $online = undef;
 }
 
-#
+# DEPRECATED COMMENT!!!
 # Global Variables:
 # $term ist the raw word what we search for
 # @result_list is the list were we push our results in
 # $pattern ist the regular expression for the offline search
 #
-our $term = '';
-our @result_list = ();
-our $pattern = qr(^.*?$term.*?$);
+our $pattern = ""; 
 
-# determine parameters in anonymous block
+&main;
+
+sub main 
 {
-    if ( $ARGV[0] ) {
-        $term = $ARGV[0];
+    my $term = $ARGV[0] || '';
+
+    say qq/type :q or :quit to exit interactive mode\n/ if $interactive;
+
+    while (1) {
+        if ( $term ) {
+            #$pattern = qr(^.*?$term.*?$);
+            processing_args($term);
+        }
+        if ( !$term && !$interactive ) {
+            &usage;
+        }
+        if ( $interactive ) {
+            chomp($term = <STDIN>);
+            last if $term =~ /^:q(:?uit)?$/;
+            if ($term =~ s/^:c\s?(en|de|off|on)$/$1/) {
+                parse_commands($term);
+                chomp($term = <STDIN>);
+            }
+        }
+        last unless $interactive
     }
-    else { &usage; }
+}
+
+sub parse_commands 
+{
+    my $cmd = shift;
+
+    if ($cmd =~ /en/) {
+        $de_en = 0;
+        $en_de = 1;
+    }
+    elsif ($cmd =~ /de/) {
+        $de_en = 1;
+        $en_de = 0;
+    }
+    elsif ($cmd =~ /off/) {
+        $offline = 1;
+        $online = 0;
+    }
+    elsif ($cmd =~ /on/) {
+        $online = 1;
+        $offline = 0;
+    }
+    else {
+        warn("unknown command: $cmd");
+        return 0;
+    }
+
+    say qq/[DEBUG] de_en: $de_en, en_de: $en_de/;
+    return 1;
+}
+
+
+#
+# determine parameters in anonymous block
+#
+sub processing_args($)
+{
+    my $term = shift;
+    say qq/[DEBUG] term: $term/;
+    my @result_list = ();
 
 # language decision 
     if ( $de_en ) {
@@ -77,12 +130,15 @@ our $pattern = qr(^.*?$term.*?$);
 
 # Mode decision
     if ( $offline ) {
+        say qq/[DEBUG] offline mode:/;
         @result_list = &offline_mode;
     }
     elsif ( $online ) {
-        @result_list = &online_mode;
+        say qq/[DEBUG] online mode/;
+        @result_list = online_mode($term);
     }
     else {
+        say qq/[DEBUG] hybrid mode/;
         my @tmp_1 = ();
         my @tmp_2 = ();
 
@@ -91,11 +147,12 @@ our $pattern = qr(^.*?$term.*?$);
         }
         else {
             @tmp_1 = &offline_mode;
-            @tmp_2 = &online_mode;
+            @tmp_2 = online_mode($term);
             @result_list = (@tmp_1, @tmp_2);
         }
     }
     output(@result_list);
+
 }
 
 #
@@ -164,8 +221,9 @@ sub pretty_printer(\@)
 # Triggers the certain subroutines to make the online request
 # Returns the list which will be returned by the module.
 #
-sub online_mode
+sub online_mode($)
 {
+    my $term = shift;
     my $ref_res = online_request($term);
     my @list = parse_online_result($ref_res);
     return @list;
@@ -181,6 +239,7 @@ sub offline_mode
 {
     my @list = ();
     my $handle = &getting_offline_resource;
+    say qq/[DEBUG] pattern: $pattern/;
     @list = search_word($pattern, $handle);
     return @list;
 }
