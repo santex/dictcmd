@@ -16,6 +16,7 @@ my %params = (
 	PREREQ_PM                 => {
 		'Getopt::Long'        => 0,
 		'WWW::Dict::Leo::Org' => 0,
+        'IO::Prompt::Simple'  => 0,
 	},
 	EXE_FILES => [ 'dict' ],
 );
