@@ -6,7 +6,9 @@ use Config;
 use Getopt::Long;
 use Dictcmd;
 use if $Config{useithreads}, 'threads';
-use IO::Prompt::Simple;
+use IO::Prompt;
+use Term::ReadLine;
+use Term::ANSIColor qw(:constants);
 
 use feature "say";
 
@@ -19,6 +21,18 @@ sub print_results(@);
 sub sort_precise(\@);
 sub output(@);
 sub usage;
+
+#
+# hash for managing colors much cleaner
+#
+#my %colors = (
+my $red = RED;
+my $blue = BLUE;
+my $green = GREEN;
+my $white = WHITE;
+my $yellow = YELLOW;
+my $reset = RESET;
+#);
 
 #
 # Initialize the commandline argument processing
@@ -71,8 +85,9 @@ sub main
 
     ($mode, $lang) = &_get_modes if $interactive;
 
+    my $readline = new Term::ReadLine 'dictcmd';
     while ($interactive) {
-        $term = prompt qq/dictcmd:$mode:$lang/;
+        $term = $readline->readline(qq/dictcmd:$yellow$mode:$green$lang$reset>/);
         last if $term =~ /^:q(:?uit)?$/;
         if ($term =~ s/^:c\s?(en|de|off|on|hyb)$/$1/) {
             ($mode, $lang) = parse_commands($term);
@@ -101,6 +116,10 @@ sub _get_modes
         $lang = 'de';
     }
     elsif ($en_de) {
+        $lang = 'en';
+    }
+    else {
+        $en_de = 1;
         $lang = 'en';
     }
 
@@ -139,9 +158,9 @@ sub parse_commands
     }
 
     ($mode, $lang) = &_get_modes;
-    say qq/[DEBUG] de_en: $de_en, en_de: $en_de/;
-    say qq/[DEBUG] offline: $offline, online: $online/;
-    say qq/[DEBUG] mode: $mode, lang: $lang/;
+    #say qq/[DEBUG] de_en: $de_en, en_de: $en_de/;
+    #say qq/[DEBUG] offline: $offline, online: $online/;
+    #say qq/[DEBUG] mode: $mode, lang: $lang/;
     return wantarray ? ($mode, $lang) : 1;
 }
 
@@ -151,7 +170,7 @@ sub parse_commands
 sub processing_args($)
 {
     my $term = shift;
-    say qq/[DEBUG] term: $term/;
+    #say qq/[DEBUG] term: $term/;
     my @result_list = ();
 
 # language decision 
@@ -165,16 +184,16 @@ sub processing_args($)
 
 # Mode decision
     if ( $offline ) {
-        say qq/[DEBUG] offline mode:/;
+        #say qq/[DEBUG] offline mode:/;
         @result_list = &offline_mode;
     }
     elsif ( $online ) {
-        say qq/[DEBUG] online mode/;
+        #say qq/[DEBUG] online mode/;
         @result_list = online_mode($term);
     }
     else {
-        say qq/[DEBUG] hybrid mode/;
-        say qq/[DEBUG] term: $term/;
+        #say qq/[DEBUG] hybrid mode/;
+        #say qq/[DEBUG] term: $term/;
         my @tmp_1 = ();
         my @tmp_2 = ();
 
@@ -260,7 +279,7 @@ sub pretty_printer(\@)
 sub online_mode($)
 {
     my $term = shift;
-    say qq/[DEBUG] in online mode term: $term/;
+    #say qq/[DEBUG] in online mode term: $term/;
     my $ref_res = online_request($term);
     my @list = parse_online_result($ref_res);
     return @list;
@@ -276,7 +295,7 @@ sub offline_mode
 {
     my @list = ();
     my $handle = &getting_offline_resource;
-    say qq/[DEBUG] pattern: $pattern/;
+    #say qq/[DEBUG] pattern: $pattern/;
     @list = search_word($pattern, $handle);
     return @list;
 }
