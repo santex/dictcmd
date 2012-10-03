@@ -8,15 +8,8 @@ use Dictcmd;
 
 use feature "say";
 
-#
 # load thread support if exists
-#
-BEGIN
-{
-  if ( $Config{useithreads} ) {
-      eval 'use threads';
-  }
-}
+use if $Config{useithreads}, "threads";
 
 sub online_mode;
 sub offline_mode;
