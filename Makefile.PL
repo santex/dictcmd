@@ -13,10 +13,12 @@ my %params = (
 	NAME                     => 'Dictcmd',
 	AUTHOR => 'blastmaster',
 	VERSION_FROM             => 'lib/Dictcmd.pm',
-	PREREQ_PM                 => {
-		'Getopt::Long'        => 0,
-		'WWW::Dict::Leo::Org' => 0,
-        'IO::Prompt::Simple'  => 0,
+	PREREQ_PM                    =>
+    {
+		'Getopt::Long'           => 0,
+		'WWW::Dict::Leo::Org'    => 0,
+        'Term::Read::Line::Gnu'  => 0,
+        'Term::ANSIColor'        => 0,
 	},
 	EXE_FILES => [ 'dict' ],
 );

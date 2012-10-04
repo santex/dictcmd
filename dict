@@ -6,7 +6,6 @@ use Config;
 use Getopt::Long;
 use Dictcmd;
 use if $Config{useithreads}, 'threads';
-use IO::Prompt;
 use Term::ReadLine;
 use Term::ANSIColor qw(:constants);
 
@@ -65,23 +64,22 @@ if ( $@ ) {
 # @result_list is the list were we push our results in
 # $pattern ist the regular expression for the offline search
 #
-our $pattern = ""; 
+our $pattern = "";
 
 &main;
 
 # prompt Layout = dictcmd:<mode>:<input language>
 
-sub main 
+sub main
 {
+    #values(%mode) = @_;
     my $term = $ARGV[0] || '';
     my ($mode, $lang) = ("", "");
 
     say qq/type :q or :quit to exit interactive mode\n/ if $interactive;
     processing_args($term) if $term;
 
-    if ( !$term && !$interactive ) {
-        &usage;
-    }
+    &usage unless ( $term or $interactive );
 
     ($mode, $lang) = &_get_modes if $interactive;
 
@@ -98,39 +96,43 @@ sub main
     }
 }
 
-sub _get_modes
+my %mode = (
+    en => 0, # have a pattern and bool
+    de => 0, # have a pattern and bool
+    offline => 0, # have a bool
+    online => 0, # have a bool
+    hyb => 0, # have a bool
+);
+
+sub _get_pattern($)
 {
-    my ($mode, $lang) = ("hybrid", "");
-
-    if ($offline) {
-        $mode = 'offline';
-    }
-    elsif ($online) {
-        $mode = 'online';
-    }
-    else {
-        $mode = 'hybrid';
-    }
-
-    if ($de_en) {
-        $lang = 'de';
-    }
-    elsif ($en_de) {
-        $lang = 'en';
-    }
-    else {
-        $en_de = 1;
-        $lang = 'en';
-    }
-
-    return wantarray ? ($mode, $lang) : 1;
+    my $term = shift;
+    return qr/^\w+? : \w*?$term\w*?$/ if $mode{de};
+    return qr/^\w*?$term\w*? : \w+?$/ if $mode{en};
 }
 
-sub parse_commands 
+# in the other case do the same with vlaues
+# should return key of the current mode and language
+sub _get_mode
+{
+    my @mdlng = ();
+    foreach my $k (keys(%mode)) {
+        push @mdlng, $k if $mode{$k};
+    }
+    return @mdlng;
+}
+
+
+sub parse_commands
 {
     my $cmd = shift;
     my $mode = '';
     my $lang = '';
+
+    #if ($cmd eq "cls") {
+    #   system 'clear';
+    #   return;
+    #}
 
     if ($cmd =~ /en/) {
         $de_en = 0;
@@ -158,9 +160,6 @@ sub parse_commands
     }
 
     ($mode, $lang) = &_get_modes;
-    #say qq/[DEBUG] de_en: $de_en, en_de: $en_de/;
-    #say qq/[DEBUG] offline: $offline, online: $online/;
-    #say qq/[DEBUG] mode: $mode, lang: $lang/;
     return wantarray ? ($mode, $lang) : 1;
 }
 
@@ -170,30 +169,15 @@ sub parse_commands
 sub processing_args($)
 {
     my $term = shift;
-    #say qq/[DEBUG] term: $term/;
     my @result_list = ();
 
-# language decision 
-    if ( $de_en ) {
-        $pattern = qr(^\w+? : \w*?$term\w*?$);
-    }
-    elsif ( $en_de ) {
-        $pattern = qr(^\w*?$term\w*? : \w+?$);
-    }
-    else { &usage; }
-
-# Mode decision
-    if ( $offline ) {
-        #say qq/[DEBUG] offline mode:/;
+    if ( $mode{offline} ) {
         @result_list = &offline_mode;
     }
-    elsif ( $online ) {
-        #say qq/[DEBUG] online mode/;
+    elsif ( $mode{online} ) {
         @result_list = online_mode($term);
     }
-    else {
-        #say qq/[DEBUG] hybrid mode/;
-        #say qq/[DEBUG] term: $term/;
+    elsif ( $mode{hyb} ) {
         my @tmp_1 = ();
         my @tmp_2 = ();
 
@@ -206,6 +190,11 @@ sub processing_args($)
             @result_list = (@tmp_1, @tmp_2);
         }
     }
+    else {
+        croak qq/This should never happens, if you see this please inform
+        the developer/;
+    }
+
     output(@result_list);
 }
 
@@ -219,7 +208,7 @@ sub processing_args($)
 sub handle_threads
 {
     my $term = shift;
-    my ( $offline_thr ) = threads->create(\&offline_mode);
+    my ( $offline_thr ) = threads->create('offline_mode', $term);
     my ( $online_thr ) = threads->create('online_mode', $term);
 
     do {
@@ -291,9 +280,11 @@ sub online_mode($)
 # a list which contains the results.
 # Returns the list which will be returned by the module.
 #
-sub offline_mode
+sub offline_mode($)
 {
+    my $term = shift;
     my @list = ();
+    my $pattern = _get_pattern($term)
     my $handle = &getting_offline_resource;
     #say qq/[DEBUG] pattern: $pattern/;
     @list = search_word($pattern, $handle);
