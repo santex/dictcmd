@@ -1,10 +1,13 @@
 #! /usr/bin/perl
 
+package Dictcmd::Controller;
+
 use strict;
 use warnings;
+use Carp;
 use Config;
 use Getopt::Long;
-use Dictcmd;
+use Dictcmd::Ressources::Offline;
 use if $Config{useithreads}, 'threads';
 use IO::Prompt;
 use Term::ReadLine;
@@ -12,8 +15,14 @@ use Term::ANSIColor qw(:constants);
 
 use feature "say";
 
+require Exporter;
+our @ISA = qw(Exporter);
+our @EXPORTER = qw(
+  main
+);
+
 sub main;
-sub processing_args($);
+sub processing_args($$$$$);
 sub online_mode($);
 sub offline_mode;
 sub pretty_printer(\@);
@@ -23,63 +32,34 @@ sub output(@);
 sub usage;
 
 #
-# hash for managing colors much cleaner
+# Variables managing colors much cleaner
 #
-#my %colors = (
 my $red = RED;
 my $blue = BLUE;
 my $green = GREEN;
 my $white = WHITE;
 my $yellow = YELLOW;
 my $reset = RESET;
-#);
-
-#
-# Initialize the commandline argument processing
-# by using the Getopt::Long module.
-#
-my ($de_en, $en_de, $interactive, $offline, $online, $help) = (0, 0, 0, 0, 0, 0);
-GetOptions(
-    'de|de2en' => \$de_en,
-    'en|en2de' => \$en_de,
-    'i|interactive' => \$interactive,
-    'offline' => \$offline,
-    'online' => \$online,
-    'help' => \$help,
-);
-
-#
-# if the necessary module for OnlineRequests are installed
-# use it, else use everytime the offline resources.
-# ATTENTION !!! UNDEF IN $online COULD RESULTS IN PROBLEMS BY TOGGLE MODE
-#
-eval 'use OnlineRequest';
-if ( $@ ) {
-    $offline = 1;
-    $online =  0;
-}
-
-# DEPRECATED COMMENT!!!
-# Global Variables:
-# $term ist the raw word what we search for
-# @result_list is the list were we push our results in
-# $pattern ist the regular expression for the offline search
-#
-our $pattern = ""; 
-
-&main;
 
 # prompt Layout = dictcmd:<mode>:<input language>
 
-sub main 
+sub main($$$$$$$)
 {
+    my ($de_en, $en_de, $interactive, $offline, $online, $help, $term) = @_;
+    eval 'use Dictcmd::Ressoures::OnlineRequest';
+    if ( $@ ) {
+        $offline = 1;
+        $online =  0;
+    }
+
+
     my $term = $ARGV[0] || '';
     my ($mode, $lang) = ("", "");
 
     say qq/type :q or :quit to exit interactive mode\n/ if $interactive;
-    processing_args($term) if $term;
+    processing_args($de_en, $en_de, $offline, $online, $term) if $term;
 
-    if ( !$term && !$interactive ) {
+    unless ( $term or $interactive ) {
         &usage;
     }
 
@@ -93,13 +73,15 @@ sub main
             ($mode, $lang) = parse_commands($term);
         }
         else {
-            processing_args($term);
+            processing_args($de_en, $en_de, $offline, $online, $term);
         }
     }
+    if ( $help ) { &usage; }
 }
 
-sub _get_modes
+sub _get_modes($$$$)
 {
+    my ($de_en, $en_de, $offline, $online) = @_;
     my ($mode, $lang) = ("hybrid", "");
 
     if ($offline) {
@@ -126,9 +108,9 @@ sub _get_modes
     return wantarray ? ($mode, $lang) : 1;
 }
 
-sub parse_commands 
+sub parse_commands($$$$$)
 {
-    my $cmd = shift;
+    my ($de_en, $en_de, $offline, $online, $cmd) = @_;
     my $mode = '';
     my $lang = '';
 
@@ -167,13 +149,15 @@ sub parse_commands
 #
 # determine parameters in anonymous block
 #
-sub processing_args($)
+sub processing_args($$$$$)
 {
-    my $term = shift;
+    my ($de_en, $en_de, $offline, $online, $term) = @_;
+    #my $term = shift;
     #say qq/[DEBUG] term: $term/;
     my @result_list = ();
+    my $pattern = "";
 
-# language decision 
+# language decision
     if ( $de_en ) {
         $pattern = qr(^\w+? : \w*?$term\w*?$);
     }
@@ -198,7 +182,7 @@ sub processing_args($)
         my @tmp_2 = ();
 
         if ( $Config{useithreads} ) {
-            handle_threads($term);
+            handle_threads($term, $pattern);
         }
         else {
             @tmp_1 = &offline_mode;
@@ -216,10 +200,11 @@ sub processing_args($)
 # calls the routines for output. The he waits until the second thread is ready
 # too.
 #
-sub handle_threads
+sub handle_threads($$)
 {
     my $term = shift;
-    my ( $offline_thr ) = threads->create(\&offline_mode);
+    my $pattern = shift;
+    my ( $offline_thr ) = threads->create('offline_mode', $pattern);
     my ( $online_thr ) = threads->create('online_mode', $term);
 
     do {
@@ -279,7 +264,6 @@ sub pretty_printer(\@)
 sub online_mode($)
 {
     my $term = shift;
-    #say qq/[DEBUG] in online mode term: $term/;
     my $ref_res = online_request($term);
     my @list = parse_online_result($ref_res);
     return @list;
@@ -287,15 +271,15 @@ sub online_mode($)
 
 #
 # takes the handle of the offline resource at first
-# triggers the search routines from Dictcmd.pm, getting 
+# triggers the search routines from Dictcmd.pm, getting
 # a list which contains the results.
 # Returns the list which will be returned by the module.
 #
-sub offline_mode
+sub offline_mode($)
 {
+    my $pattern = shift;
     my @list = ();
     my $handle = &getting_offline_resource;
-    #say qq/[DEBUG] pattern: $pattern/;
     @list = search_word($pattern, $handle);
     return @list;
 }
@@ -320,9 +304,8 @@ sub print_results(@)
     }
 }
 
-if ( $help ) { &usage; }
 
-sub usage 
+sub usage
 {
     my $helpstring = <<"ENDHELP";
 dictcmd OPTION SEARCHITEM
@@ -341,33 +324,4 @@ ENDHELP
 }
 
 1;
-__END__
 
-=pod
-
-=head1 NAME
-
-dictcmd - for easy  german <-> english translation from your commandline
-
-=head1 DESCRIPTION
-
-This program is for german - english and english - german translation direct
-form your comandline. There are two eventual sources to get your translation.
-The first one is an simple file in your directory, the second one is to make
-an online request to a known dictonary service. You can choose which kind of
-source you ask. Only online, only offline or both (default). If you ask both
-and your perl version has ithreads enabled you get better performance by using 
-multithreading.
-
-=head1 SYNOPSIS
-
-dictcmd <OPTION> <SEARCHITEM>
-
--de2en
--de the given word is a german one and you want to search the english equivalent.
--en2de
--en the given word is a english one and you want to search the german equivalent.
--online use only online search 
--offline use only offline search in the en-de.ISO-8859-1.vok file
-
-=cut

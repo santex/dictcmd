@@ -2,14 +2,9 @@ use strict;
 use warnings;
 use Test::More tests => 2;
 
-use lib "../lib";
-
 use feature "say";
 
-BEGIN
-{
-    use_ok("Dictcmd")
-}
+BEGIN { use_ok("Dictcmd::Ressources::Offline"); }
 
 my @compare_array = (
 "ingenious : genial",

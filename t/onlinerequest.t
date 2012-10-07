@@ -4,17 +4,16 @@ use Test::More;
 
 use feature "say";
 
-use lib "../lib";
 
 BEGIN
 {
-   eval 'use OnlineRequest';
+   eval 'use Dictcmd::Ressources::OnlineRequest';
 
-   if ( $@ ) {  
+   if ( $@ ) {
        plan(skip_all => 'Online Module not installed');
    }
 
-   use_ok("OnlineRequest");
+   use_ok("Dictcmd::Ressources::OnlineRequest");
 }
 
 my $anwser = online_request("Pizza");

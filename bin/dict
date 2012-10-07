@@ -1,0 +1,32 @@
+#! /usr/bin/perl
+
+use strict;
+use warnings;
+use Getopt::Long;
+use Dictcmd::Controller;
+
+use feature "say";
+
+#
+# Initialize the commandline argument processing
+# by using the Getopt::Long module.
+#
+my ($de_en, $en_de, $interactive, $offline, $online, $help) = (0, 0, 0, 0, 0, 0);
+GetOptions(
+    'de|de2en' => \$de_en,
+    'en|en2de' => \$en_de,
+    'i|interactive' => \$interactive,
+    'offline' => \$offline,
+    'online' => \$online,
+    'help' => \$help,
+);
+
+# setting default language
+# TODO
+# -configurable option
+#
+$en_de = 1 unless ($de_en or $en_de);
+my $term = $ARGV[0] || '';
+main($de_en, $en_de, $interactive, $offline, $online, $help, $term);
+
+1;

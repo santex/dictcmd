@@ -5,7 +5,8 @@ dict
 
 t/onlinerequest.t
 t/dictcmd.t
+t/controller.t
 
-lib/Dictcmd.pm
-lib/OnlineRequest.pm
+lib/Dictcmd/Ressources/Offline.pm
+lib/Dictcmd/Ressources/OnlineRequest.pm
 
