@@ -1,5 +1,3 @@
-#! /usr/bin/perl
-
 package Dictcmd::Controller;
 
 use strict;
@@ -8,8 +6,8 @@ use Carp;
 use Config;
 use Getopt::Long;
 use Dictcmd::Ressources::Offline;
+use Dictcmd::Ressources::OnlineRequest;
 use if $Config{useithreads}, 'threads';
-use IO::Prompt;
 use Term::ReadLine;
 use Term::ANSIColor qw(:constants);
 
@@ -18,18 +16,9 @@ use feature "say";
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORTER = qw(
-  main
+    isInteractive
+    run
 );
-
-sub main;
-sub processing_args($$$$$);
-sub online_mode($);
-sub offline_mode;
-sub pretty_printer(\@);
-sub print_results(@);
-sub sort_precise(\@);
-sub output(@);
-sub usage;
 
 #
 # Variables managing colors much cleaner
@@ -41,156 +30,109 @@ my $white = WHITE;
 my $yellow = YELLOW;
 my $reset = RESET;
 
-# prompt Layout = dictcmd:<mode>:<input language>
 
-sub main($$$$$$$)
+# TODO
+# Module::Pluginable
+# caching mechanism for online requests
+#
+
+sub new
 {
-    my ($de_en, $en_de, $interactive, $offline, $online, $help, $term) = @_;
-    eval 'use Dictcmd::Ressoures::OnlineRequest';
-    if ( $@ ) {
-        $offline = 1;
-        $online =  0;
+    my $class = shift;
+    my ($de_en, $en_de, $offline, $online, $term) = @_;
+    my $mode = "";
+    unless ($offline or $online) {
+        $mode = qq/hyb/;
+    }
+    else {
+        $mode = ($offline) ? qq/off/ : qq/on/;
     }
 
+    return bless {
+        lang => ($de_en) ? qq/de/ : qq/en/,
+        pattern => {
+            de => qr(^\w+? : \w*$term\w*?$),
+            en => qr(^\w*?$term\w*? : \w+?$),
+        },
+        offline => $offline,
+        online => $online,
+        mode => $mode,
+        term => $term,
+    }, $class;
+}
 
-    my $term = $ARGV[0] || '';
-    my ($mode, $lang) = ("", "");
+sub update_pattern
+{
+    my $self = shift;
+    my $term = $self->{term};
+    $self->{pattern}->{de} = qr(^\w+? : \w*$term\w*?$);
+    $self->{pattern}->{en} = qr(^\w*?$term\w*? : \w+?$);
+}
 
-    say qq/type :q or :quit to exit interactive mode\n/ if $interactive;
-    processing_args($de_en, $en_de, $offline, $online, $term) if $term;
 
-    unless ( $term or $interactive ) {
-        &usage;
-    }
-
-    ($mode, $lang) = &_get_modes if $interactive;
-
+# prompt Layout = dictcmd:<mode>:<input language>
+sub runInteractive
+{
+    my $self = shift;
+    say qq/type :q or :quit to exit interactive mode\n/;
+    my $mode = \$self->{mode};
+    my $lang = \$self->{lang};
     my $readline = new Term::ReadLine 'dictcmd';
-    while ($interactive) {
-        $term = $readline->readline(qq/dictcmd:$yellow$mode:$green$lang$reset>/);
-        last if $term =~ /^:q(:?uit)?$/;
-        if ($term =~ s/^:c\s?(en|de|off|on|hyb)$/$1/) {
-            ($mode, $lang) = parse_commands($term);
+    while (1) {
+        $self->{term} = $readline->readline(qq/dictcmd:$yellow$$mode:$green$$lang$reset>/);
+        last if $self->{term} =~ /^:q(:?uit)?$/;
+        if ($self->{term} =~ s/^:c\s?(en|de|off|on|hyb)$/$1/) {
+            $self->parse_commands();
         }
         else {
-            processing_args($de_en, $en_de, $offline, $online, $term);
+            $self->update_pattern();
+            $self->run();
         }
     }
-    if ( $help ) { &usage; }
 }
 
-sub _get_modes($$$$)
+sub parse_commands
 {
-    my ($de_en, $en_de, $offline, $online) = @_;
-    my ($mode, $lang) = ("hybrid", "");
+    my $self = shift;
+    my $cmd = $self->{term};
 
-    if ($offline) {
-        $mode = 'offline';
+    if ($cmd eq qq/en/ or $cmd eq qq/de/) {
+        $self->{lang} = $cmd;
+        return;
     }
-    elsif ($online) {
-        $mode = 'online';
+    elsif ($cmd eq qq/on/ or $cmd eq qq/off/ or $cmd eq qq/hyb/) {
+        unless ($cmd eq qq/on/ or $cmd eq qq/off/) {
+            $self->{offline} = 0;
+            $self->{online} = 0;
+        }
+        else {
+            $self->{offline} = ($cmd eq qq/off/) ? 1 : 0;
+            $self->{online} = ($cmd eq qq/on/) ? 1 : 0;
+        }
+        $self->{mode} = $cmd;
     }
-    else {
-        $mode = 'hybrid';
-    }
-
-    if ($de_en) {
-        $lang = 'de';
-    }
-    elsif ($en_de) {
-        $lang = 'en';
-    }
-    else {
-        $en_de = 1;
-        $lang = 'en';
-    }
-
-    return wantarray ? ($mode, $lang) : 1;
 }
 
-sub parse_commands($$$$$)
+
+sub run
 {
-    my ($de_en, $en_de, $offline, $online, $cmd) = @_;
-    my $mode = '';
-    my $lang = '';
+    my $self = shift;
 
-    if ($cmd =~ /en/) {
-        $de_en = 0;
-        $en_de = 1;
-    }
-    elsif ($cmd =~ /de/) {
-        $de_en = 1;
-        $en_de = 0;
-    }
-    elsif ($cmd =~ /off/) {
-        $offline = 1;
-        $online = 0;
-    }
-    elsif ($cmd =~ /on/) {
-        $online = 1;
-        $offline = 0;
-    }
-    elsif ($cmd =~ /hyb/) {
-        $online = 0;
-        $offline = 0;
-    }
-    else {
-        warn("unknown command: $cmd");
-        return 0;
-    }
-
-    ($mode, $lang) = &_get_modes;
-    #say qq/[DEBUG] de_en: $de_en, en_de: $en_de/;
-    #say qq/[DEBUG] offline: $offline, online: $online/;
-    #say qq/[DEBUG] mode: $mode, lang: $lang/;
-    return wantarray ? ($mode, $lang) : 1;
-}
-
-#
-# determine parameters in anonymous block
-#
-sub processing_args($$$$$)
-{
-    my ($de_en, $en_de, $offline, $online, $term) = @_;
-    #my $term = shift;
-    #say qq/[DEBUG] term: $term/;
-    my @result_list = ();
-    my $pattern = "";
-
-# language decision
-    if ( $de_en ) {
-        $pattern = qr(^\w+? : \w*?$term\w*?$);
-    }
-    elsif ( $en_de ) {
-        $pattern = qr(^\w*?$term\w*? : \w+?$);
-    }
-    else { &usage; }
-
-# Mode decision
-    if ( $offline ) {
-        #say qq/[DEBUG] offline mode:/;
-        @result_list = &offline_mode;
-    }
-    elsif ( $online ) {
-        #say qq/[DEBUG] online mode/;
-        @result_list = online_mode($term);
-    }
-    else {
-        #say qq/[DEBUG] hybrid mode/;
-        #say qq/[DEBUG] term: $term/;
+    unless ($self->{offline} or $self->{online}) {
+        if ( $Config{useithreads} ) {
+            $self->handle_threads();
+            return;
+        }
         my @tmp_1 = ();
         my @tmp_2 = ();
-
-        if ( $Config{useithreads} ) {
-            handle_threads($term, $pattern);
-        }
-        else {
-            @tmp_1 = &offline_mode;
-            @tmp_2 = online_mode($term);
-            @result_list = (@tmp_1, @tmp_2);
-        }
+        @tmp_1 = $self->offline_mode();
+        @tmp_2 = $self->online_mode();
+        output(@tmp_1, @tmp_2);
     }
-    output(@result_list);
+    else {
+        output($self->offline_mode()) if $self->{offline};
+        output($self->online_mode()) if $self->{online};
+    }
 }
 
 #
@@ -200,12 +142,11 @@ sub processing_args($$$$$)
 # calls the routines for output. The he waits until the second thread is ready
 # too.
 #
-sub handle_threads($$)
+sub handle_threads
 {
-    my $term = shift;
-    my $pattern = shift;
-    my ( $offline_thr ) = threads->create('offline_mode', $pattern);
-    my ( $online_thr ) = threads->create('online_mode', $term);
+    my $self = shift;
+    my ( $offline_thr ) = threads->create(\&offline_mode, $self);
+    my ( $online_thr ) = threads->create(\&online_mode, $self);
 
     do {
         if ($offline_thr->is_joinable()) {
@@ -217,7 +158,6 @@ sub handle_threads($$)
             output(@online_result);
         }
     } while ( threads->list() );
-
 }
 
 #
@@ -226,15 +166,15 @@ sub handle_threads($$)
 sub output(@)
 {
     my @raw_list = @_;
-    pretty_printer(@raw_list);
-    @raw_list= sort_precise(@raw_list);
+    pretty_printer(\@raw_list);
+    @raw_list= sort_precise(\@raw_list);
     print_results(@raw_list);
 }
 
 #
 # Sorts the results by the shortest first.
 #
-sub sort_precise(\@) 
+sub sort_precise(\@)
 {
     my @list = @{ shift() };
     @list = sort { length($a) <=> length($b) } @list;
@@ -246,8 +186,8 @@ sub sort_precise(\@)
 #
 sub pretty_printer(\@)
 {
-    my $su = sub 
-    { 
+    my $su = sub
+    {
         s/(?:\[.*?\])//g;
         s/(?:\-\s.*?\:??)//g;
         s/(?:\(.*?\))//g;
@@ -261,9 +201,10 @@ sub pretty_printer(\@)
 # Triggers the certain subroutines to make the online request
 # Returns the list which will be returned by the module.
 #
-sub online_mode($)
+sub online_mode
 {
-    my $term = shift;
+    my $self = shift;
+    my $term = $self->{term};
     my $ref_res = online_request($term);
     my @list = parse_online_result($ref_res);
     return @list;
@@ -275,9 +216,10 @@ sub online_mode($)
 # a list which contains the results.
 # Returns the list which will be returned by the module.
 #
-sub offline_mode($)
+sub offline_mode
 {
-    my $pattern = shift;
+    my $self = shift;
+    my $pattern = $self->{pattern}->{$self->{lang}};
     my @list = ();
     my $handle = &getting_offline_resource;
     @list = search_word($pattern, $handle);
@@ -304,24 +246,4 @@ sub print_results(@)
     }
 }
 
-
-sub usage
-{
-    my $helpstring = <<"ENDHELP";
-dictcmd OPTION SEARCHITEM
-
--de2en
--de the given word is a german one and you want to search the english equivalent.
--en2de
--en the given word is a english one and you want to search the german equivalent.
--online use only online search 
--offline use only offline search in the en-de.ISO-8859-1.vok file
-
-ENDHELP
-
-    say $helpstring;
-    exit;
-}
-
 1;
-

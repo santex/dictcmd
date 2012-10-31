@@ -13,8 +13,8 @@ use feature "say";
 #
 my ($de_en, $en_de, $interactive, $offline, $online, $help) = (0, 0, 0, 0, 0, 0);
 GetOptions(
-    'de|de2en' => \$de_en,
-    'en|en2de' => \$en_de,
+    'de' => \$de_en,
+    'en' => \$en_de,
     'i|interactive' => \$interactive,
     'offline' => \$offline,
     'online' => \$online,
@@ -25,8 +25,34 @@ GetOptions(
 # TODO
 # -configurable option
 #
+
+# en_de and de_en replace by one single
+# lang option which gets the string of language
+
+&usage if $help;
 $en_de = 1 unless ($de_en or $en_de);
 my $term = $ARGV[0] || '';
-main($de_en, $en_de, $interactive, $offline, $online, $help, $term);
+
+my $controller = Dictcmd::Controller->new($de_en, $en_de, $offline, $online, $term);
+$controller->run() if $term;
+$controller->runInteractive() if $interactive;
+
+sub usage
+{
+    my $helpstring = <<"ENDHELP";
+dictcmd OPTION SEARCHITEM
+
+-de2en
+-de the given word is a german one and you want to search the english equivalent.
+-en2de
+-en the given word is a english one and you want to search the german equivalent.
+-online use only online search 
+-offline use only offline search in the en-de.ISO-8859-1.vok file
+
+ENDHELP
+
+    say $helpstring;
+    exit;
+}
 
 1;

@@ -12,13 +12,14 @@ copy("en-de.ISO-8859-1.vok", "$HOME/.dictcmd/") or warn qq/copying failed/;
 my %params = (
 	NAME                     => 'Dictcmd',
 	AUTHOR => 'blastmaster',
-	VERSION_FROM             => 'lib/Dictcmd.pm',
+	VERSION_FROM             => 'lib/Dictcmd/Ressources/Offline.pm',
 	PREREQ_PM                 => {
 		'Getopt::Long'        => 0,
 		'WWW::Dict::Leo::Org' => 0,
-        'IO::Prompt::Simple'  => 0,
+        'Term::ANSIColor' => 0,
+        'Term::ReadLine::Gnu' => 0,
 	},
-	EXE_FILES => [ 'dict' ],
+	EXE_FILES => [ 'bin/dict' ],
 );
 
 my $mmv = eval $ExtUtils::MakeMaker::VERSION;

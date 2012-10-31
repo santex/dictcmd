@@ -1,12 +1,14 @@
 en-de.ISO-8859-1.vok
 Makefile.PL
 README.pod
-dict
+
+bin/dict
 
 t/onlinerequest.t
-t/dictcmd.t
+t/offline.t
 t/controller.t
 
+lib/Dictcmd/Controller.pm
 lib/Dictcmd/Ressources/Offline.pm
 lib/Dictcmd/Ressources/OnlineRequest.pm
 
