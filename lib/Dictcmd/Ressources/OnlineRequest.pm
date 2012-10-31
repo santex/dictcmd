@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 
-package OnlineRequest;
+package Dictcmd::Ressources::OnlineRequest;
 
 use strict;
 use warnings;
@@ -20,8 +20,8 @@ our @EXPORT = qw(
     online_request
 );
 
-# 
-# Getting the searched word as parameter 
+#
+# Getting the searched word as parameter
 # and executes the search after on the leo.org
 # dictionary service.
 # Returns a reference on an complex datastructure.
@@ -39,8 +39,8 @@ sub online_request($)
 }
 
 #
-# Getting a reference on the complex datastructure which 
-# contains the search results. 
+# Getting a reference on the complex datastructure which
+# contains the search results.
 # Parse the relevant data in an colon seperated list.
 # These list will be returned.
 #
@@ -52,13 +52,13 @@ sub parse_online_result($)
         for my $j ( 0 .. $#{$ref->[$i]->{data}} ) {
             if ( $ref->[$i]->{data}->[$j]->{left} &&
                 $ref->[$i]->{data}->[$j]->{left} ) {
-                if ( $ref->[$i]->{data}->[$j]->{left} eq '' 
+                if ( $ref->[$i]->{data}->[$j]->{left} eq ''
                     || $ref->[$i]->{data}->[$j]->{right} eq '' ) {
                     next;
                 }
                 else {
-                    push @result_list, join ' : ', 
-                    $ref->[$i]->{data}->[$j]->{left}, 
+                    push @result_list, join ' : ',
+                    $ref->[$i]->{data}->[$j]->{left},
                     $ref->[$i]->{data}->[$j]->{right};
                 }
             }

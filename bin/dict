@@ -1,0 +1,58 @@
+#! /usr/bin/perl
+
+use strict;
+use warnings;
+use Getopt::Long;
+use Dictcmd::Controller;
+
+use feature "say";
+
+#
+# Initialize the commandline argument processing
+# by using the Getopt::Long module.
+#
+my ($de_en, $en_de, $interactive, $offline, $online, $help) = (0, 0, 0, 0, 0, 0);
+GetOptions(
+    'de' => \$de_en,
+    'en' => \$en_de,
+    'i|interactive' => \$interactive,
+    'offline' => \$offline,
+    'online' => \$online,
+    'help' => \$help,
+);
+
+# setting default language
+# TODO
+# -configurable option
+#
+
+# en_de and de_en replace by one single
+# lang option which gets the string of language
+
+&usage if $help;
+$en_de = 1 unless ($de_en or $en_de);
+my $term = $ARGV[0] || '';
+
+my $controller = Dictcmd::Controller->new($de_en, $en_de, $offline, $online, $term);
+$controller->run() if $term;
+$controller->runInteractive() if $interactive;
+
+sub usage
+{
+    my $helpstring = <<"ENDHELP";
+dictcmd OPTION SEARCHITEM
+
+-de2en
+-de the given word is a german one and you want to search the english equivalent.
+-en2de
+-en the given word is a english one and you want to search the german equivalent.
+-online use only online search 
+-offline use only offline search in the en-de.ISO-8859-1.vok file
+
+ENDHELP
+
+    say $helpstring;
+    exit;
+}
+
+1;

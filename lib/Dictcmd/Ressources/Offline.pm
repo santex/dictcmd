@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 
-package Dictcmd;
+package Dictcmd::Ressources::Offline;
 
 use strict;
 use warnings;
@@ -25,8 +25,8 @@ our $filename;
 $filename = "$HOME/.dictcmd/".FILE;
 
 #
-# Reads the whole file given by a filehandle 
-# line by line in a list. 
+# Reads the whole file given by a filehandle
+# line by line in a list.
 # Returns a reference to that list.
 #
 sub take_the_file_content($)
@@ -38,12 +38,12 @@ sub take_the_file_content($)
 		push @content_list, $_;
 	}
 	close $handle;
-	
+
 	return \@content_list;
 }
 
 #
-# open the offline resource 
+# open the offline resource
 # returns the filehandle
 #
 sub getting_offline_resource
