@@ -20,6 +20,8 @@ our @EXPORTER = qw(
     run
 );
 
+# ABSTRACT: Commandline Client for German English translation
+
 #
 # Variables managing colors much cleaner
 #
