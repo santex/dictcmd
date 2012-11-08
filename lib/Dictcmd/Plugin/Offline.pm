@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 
-package Dictcmd::Ressources::Offline;
+package Dictcmd::Plugin::Offline;
 
 use strict;
 use warnings;
@@ -13,6 +13,7 @@ use feature "say";
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(
+    run
     search_word
     take_the_file_content
     getting_offline_resource
@@ -66,6 +67,14 @@ sub search_word($$)
     my $ref_file_content = take_the_file_content($handle);
     @results = grep {/$regex/i} @{$ref_file_content};
     return @results;
+}
+
+sub run
+{
+    my $regex = shift;
+    my $handle = getting_offline_resource();
+    my @list = search_word($regex, $handle);
+    return @list;
 }
 
 1;

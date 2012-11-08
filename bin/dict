@@ -34,7 +34,7 @@ $en_de = 1 unless ($de_en or $en_de);
 my $term = $ARGV[0] || '';
 
 my $controller = Dictcmd::Controller->new($de_en, $en_de, $offline, $online, $term);
-$controller->run() if $term;
+$controller->start() if $term;
 $controller->runInteractive() if $interactive;
 
 sub usage

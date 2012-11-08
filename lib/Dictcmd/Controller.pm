@@ -5,11 +5,11 @@ use warnings;
 use Carp;
 use Config;
 use Getopt::Long;
-use Dictcmd::Ressources::Offline;
-use Dictcmd::Ressources::OnlineRequest;
 use if $Config{useithreads}, 'threads';
 use Term::ReadLine;
 use Term::ANSIColor qw(:constants);
+use Module::Pluggable search_path => "Dictcmd::Plugin", require => 1;
+use Dictcmd::Plugin::Offline;
 
 use feature "say";
 
@@ -17,7 +17,7 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORTER = qw(
     isInteractive
-    run
+    start
 );
 
 # ABSTRACT: Commandline Client for German English translation
@@ -32,11 +32,6 @@ my $white = WHITE;
 my $yellow = YELLOW;
 my $reset = RESET;
 
-
-# TODO
-# Module::Pluginable
-# caching mechanism for online requests
-#
 
 sub new
 {
@@ -88,7 +83,7 @@ sub runInteractive
         }
         else {
             $self->update_pattern();
-            $self->run();
+            $self->start();
         }
     }
 }
@@ -116,7 +111,7 @@ sub parse_commands
 }
 
 
-sub run
+sub start
 {
     my $self = shift;
 
@@ -207,8 +202,10 @@ sub online_mode
 {
     my $self = shift;
     my $term = $self->{term};
-    my $ref_res = online_request($term);
-    my @list = parse_online_result($ref_res);
+    my @list = ();
+    for my $plugin ($self->plugins()) {
+       push @list, $plugin->run($term);
+    }
     return @list;
 }
 
@@ -223,8 +220,8 @@ sub offline_mode
     my $self = shift;
     my $pattern = $self->{pattern}->{$self->{lang}};
     my @list = ();
-    my $handle = &getting_offline_resource;
-    @list = search_word($pattern, $handle);
+    @list = run($pattern);
+
     return @list;
 }
 
