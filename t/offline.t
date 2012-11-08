@@ -4,7 +4,7 @@ use Test::More tests => 2;
 
 use feature "say";
 
-BEGIN { use_ok("Dictcmd::Plugin::Offline"); }
+BEGIN { use_ok("Dictcmd::Ressource::Offline"); }
 
 my @compare_array = (
 "ingenious : genial",

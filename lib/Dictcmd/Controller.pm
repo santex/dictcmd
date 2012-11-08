@@ -9,7 +9,7 @@ use if $Config{useithreads}, 'threads';
 use Term::ReadLine;
 use Term::ANSIColor qw(:constants);
 use Module::Pluggable search_path => "Dictcmd::Plugin", require => 1;
-use Dictcmd::Plugin::Offline;
+use Dictcmd::Ressource::Offline;
 
 use feature "say";
 
