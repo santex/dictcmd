@@ -1,0 +1,14 @@
+LICENSE
+MANIFEST
+META.yml
+Makefile.PL
+README.pod
+bin/dict
+dist.ini
+en-de.ISO-8859-1.vok
+lib/Dictcmd/Controller.pm
+lib/Dictcmd/Ressources/Offline.pm
+lib/Dictcmd/Ressources/OnlineRequest.pm
+t/controller.t
+t/offline.t
+t/onlinerequest.t
