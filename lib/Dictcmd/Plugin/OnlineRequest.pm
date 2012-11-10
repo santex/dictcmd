@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 
-package Dictcmd::Ressources::OnlineRequest;
+package Dictcmd::Plugin::OnlineRequest;
 
 use strict;
 use warnings;
@@ -16,6 +16,7 @@ our @ISA = qw(Exporter);
 our $VERSION = 0.1;
 
 our @EXPORT = qw(
+    run
     parse_online_result
     online_request
 );
@@ -65,6 +66,15 @@ sub parse_online_result($)
         }
     }
     return @result_list;
+}
+
+sub run
+{
+    shift;
+    my $word = shift;
+    my $ref = online_request($word);
+    my @list = parse_online_result($ref);
+    return @list;
 }
 
 
