@@ -32,25 +32,27 @@ GetOptions(
 &usage if $help;
 $en_de = 1 unless ($de_en or $en_de);
 my $term = $ARGV[0] || '';
-
+&usage unless $term or $interactive;
 my $controller = Dictcmd::Controller->new($de_en, $en_de, $offline, $online, $term);
 $controller->start() if $term;
 $controller->runInteractive() if $interactive;
 
 sub usage
 {
+#    my $helpstring = <<"ENDHELP";
+#dictcmd OPTION SEARCHITEM
+#
+#-de2en
+#-de the given word is a german one and you want to search the english equivalent.
+#-en2de
+#-en the given word is a english one and you want to search the german equivalent.
+#-online use only online search 
+#-offline use only offline search in the en-de.ISO-8859-1.vok file
+#
+#ENDHELP
     my $helpstring = <<"ENDHELP";
-dictcmd OPTION SEARCHITEM
-
--de2en
--de the given word is a german one and you want to search the english equivalent.
--en2de
--en the given word is a english one and you want to search the german equivalent.
--online use only online search 
--offline use only offline search in the en-de.ISO-8859-1.vok file
-
+This a development Version, documentation comming soon.
 ENDHELP
-
     say $helpstring;
     exit;
 }
