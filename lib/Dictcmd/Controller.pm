@@ -22,9 +22,9 @@ our @EXPORTER = qw(
 
 # ABSTRACT: Commandline Client for German English translation
 
-#
-# Variables managing colors much cleaner
-#
+=attr
+ Variables managing colors
+=cut
 my $red = RED;
 my $blue = BLUE;
 my $green = GREEN;
@@ -32,7 +32,9 @@ my $white = WHITE;
 my $yellow = YELLOW;
 my $reset = RESET;
 
-
+=method new:
+Constructor initialize a Dict::Controller object
+=cut
 sub new
 {
     my $class = shift;
@@ -58,6 +60,10 @@ sub new
     }, $class;
 }
 
+=method update_pattern:
+sets the current search term in the reqular expression pattern
+for the offline search
+=cut
 sub update_pattern
 {
     my $self = shift;
@@ -67,7 +73,11 @@ sub update_pattern
 }
 
 
-# prompt Layout = dictcmd:<mode>:<input language>
+=method runInteractive:
+Handle the interacitve mode, represents a read eval print loop
+for the specific dictcmd commands.
+It runs a prompt with the following Layout = dictcmd:<mode>:<input_language>
+=cut
 sub runInteractive
 {
     my $self = shift;
@@ -88,6 +98,10 @@ sub runInteractive
     }
 }
 
+=method parse_commands:
+Updates object attributes if they should be changed because of controll
+command input in interactive mode
+=cut
 sub parse_commands
 {
     my $self = shift;
@@ -110,7 +124,9 @@ sub parse_commands
     }
 }
 
-
+=method start;
+This method represents the evaluation of the modes
+=cut
 sub start
 {
     my $self = shift;
@@ -132,13 +148,13 @@ sub start
     }
 }
 
-#
-# Thread handling routine here we start two threads, one for the offline
-# request and another for the online request. The master-thread will wait
-# until one of them is joinable, then he takes the result of the thread and
-# calls the routines for output. The he waits until the second thread is ready
-# too.
-#
+=method handle_threads:
+ Thread handling routine here we start two threads, one for the offline
+ request and another for the online request. The master-thread will wait
+ until one of them is joinable, then he takes the result of the thread and
+ calls the routines for output. The he waits until the second thread is ready
+ too.
+=cut
 sub handle_threads
 {
     my $self = shift;
@@ -157,9 +173,9 @@ sub handle_threads
     } while ( threads->list() );
 }
 
-#
-# Calls the subroutines to getting a nice output
-#
+=method output:
+ Calls the subroutines to getting a nice output
+=cut
 sub output(@)
 {
     my @raw_list = @_;
@@ -168,9 +184,9 @@ sub output(@)
     print_results(@raw_list);
 }
 
-#
-# Sorts the results by the shortest first.
-#
+=method sort_precise;
+ Sorts the results by the shortest first.
+=cut
 sub sort_precise(\@)
 {
     my @list = @{ shift() };
@@ -178,9 +194,9 @@ sub sort_precise(\@)
     return @list;
 }
 
-#
-# This subroutine deletes some ugly features in the list.
-#
+=method prettry_printer;
+ This subroutine deletes some ugly features in the list.
+=cut
 sub pretty_printer(\@)
 {
     my $su = sub
@@ -194,10 +210,10 @@ sub pretty_printer(\@)
     map { $su->($_) } @{shift()};
 }
 
-#
-# Triggers the certain subroutines to make the online request
-# Returns the list which will be returned by the module.
-#
+=method online_mode:
+ Triggers the certain subroutines to make the online request
+ Returns the list which will be returned by the module.
+=cut
 sub online_mode
 {
     my $self = shift;
@@ -209,12 +225,12 @@ sub online_mode
     return @list;
 }
 
-#
-# takes the handle of the offline resource at first
-# triggers the search routines from Dictcmd.pm, getting
-# a list which contains the results.
-# Returns the list which will be returned by the module.
-#
+=method offline_mode:
+ takes the handle of the offline resource at first
+ triggers the search routines from Dictcmd.pm, getting
+ a list which contains the results.
+ Returns the list which will be returned by the module.
+=cut
 sub offline_mode
 {
     my $self = shift;
@@ -225,10 +241,10 @@ sub offline_mode
     return @list;
 }
 
-#
-# Formatted output of the results, not perfect but readable
-# without eyebleeding
-#
+=method print_results:
+ Formatted output of the results, not perfect but readable
+ without eyebleeding
+=cut
 sub print_results(@)
 {
     my @list = @_;

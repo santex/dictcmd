@@ -21,12 +21,14 @@ our @EXPORT = qw(
     online_request
 );
 
-#
-# Getting the searched word as parameter
-# and executes the search after on the leo.org
-# dictionary service.
-# Returns a reference on an complex datastructure.
-#
+# ABSTRACT: Plugin for leo.org request
+
+=method online_request:
+Getting the searched word as parameter
+and executes the search after on the leo.org
+dictionary service.
+Returns a reference on an complex datastructure.
+=cut
 sub online_request($)
 {
     my $word = shift;
@@ -39,12 +41,12 @@ sub online_request($)
     return \@matches;
 }
 
-#
-# Getting a reference on the complex datastructure which
-# contains the search results.
-# Parse the relevant data in an colon seperated list.
-# These list will be returned.
-#
+=method parse_online_result
+Getting a reference on the complex datastructure which
+contains the search results.
+Parse the relevant data in an colon seperated list.
+These list will be returned.
+=cut
 sub parse_online_result($)
 {
     my $ref = shift;
@@ -68,6 +70,9 @@ sub parse_online_result($)
     return @result_list;
 }
 
+=method run:
+one method to do both
+=cut
 sub run
 {
     shift;

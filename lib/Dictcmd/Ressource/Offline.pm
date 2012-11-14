@@ -14,22 +14,22 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(
     run
-    search_word
     take_the_file_content
     getting_offline_resource
 );
 
-our $VERSION = 0.1;
+# ABSTRACT: Ressource module for offline search
 
-# setting offline resource
-our $filename;
-$filename = "$HOME/.dictcmd/".FILE;
+=attr
+ setting offline resource
+=cut
+our $filename = "$HOME/.dictcmd/".FILE;
 
-#
-# Reads the whole file given by a filehandle
-# line by line in a list.
-# Returns a reference to that list.
-#
+=method take_the_file_content
+ Reads the whole file given by a filehandle
+ line by line in a list.
+ Returns a reference to that list.
+=cut
 sub take_the_file_content($)
 {
 	my $handle = shift;
@@ -43,10 +43,10 @@ sub take_the_file_content($)
 	return \@content_list;
 }
 
-#
-# open the offline resource
-# returns the filehandle
-#
+=method getting_offline_ressource
+ open the offline resource
+ returns the filehandle
+=cut
 sub getting_offline_resource
 {
 	my $handle = do { local *HANDLE };
@@ -54,21 +54,11 @@ sub getting_offline_resource
 	return $handle;
 }
 
-# 
-# Given scalar parameter is a regular expression.
-# The subroutine will search after that in a given file.
-# Returns a list with the results were the parameter matched.
-#
-sub search_word($$)
-{
-    my $regex = shift;
-    my $handle = shift;
-    my @results = ();
-    my $ref_file_content = take_the_file_content($handle);
-    @results = grep {/$regex/i} @{$ref_file_content};
-    return @results;
-}
-
+=method seach_word
+ Given scalar parameter is a regular expression.
+ The subroutine will search after that in special file.
+ Returns a list with the results were the parameter matched.
+=cut
 sub run
 {
     my $regex = shift;

@@ -7,10 +7,13 @@ use Dictcmd::Controller;
 
 use feature "say";
 
-#
-# Initialize the commandline argument processing
-# by using the Getopt::Long module.
-#
+# PODNAME: dict
+# ABSTRACT: executable script
+
+=attr Options:
+Initialize the commandline argument processing
+by using the Getopt::Long module.
+=cut
 my ($de_en, $en_de, $interactive, $offline, $online, $help) = (0, 0, 0, 0, 0, 0);
 GetOptions(
     'de' => \$de_en,
@@ -37,6 +40,9 @@ my $controller = Dictcmd::Controller->new($de_en, $en_de, $offline, $online, $te
 $controller->start() if $term;
 $controller->runInteractive() if $interactive;
 
+=func usage:
+Prints the Usage.
+=cut
 sub usage
 {
 #    my $helpstring = <<"ENDHELP";
