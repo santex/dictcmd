@@ -13,7 +13,7 @@ my @compare_array = (
 );
 
 my $pattern = qr(^\w+? : \w*?genial\w*?$);
-my @searched_words = search_word($pattern, \*DATA);
+my @searched_words = run($pattern, \*DATA);
 is_deeply(\@searched_words, \@compare_array, "arrays equal");
 
 __DATA__

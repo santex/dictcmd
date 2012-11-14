@@ -63,7 +63,8 @@ sub run
 {
     my $regex = shift;
     my $handle = getting_offline_resource();
-    my @list = search_word($regex, $handle);
+    my $ref_file_content = take_the_file_content($handle);
+    my @list= grep {/$regex/i} @{$ref_file_content};
     return @list;
 }
 
