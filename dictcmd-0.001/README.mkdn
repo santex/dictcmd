@@ -1,0 +1,73 @@
+# NAME
+
+Dictcmd::Controller - Commandline Client for German English translation
+
+# VERSION
+
+version 0.001
+
+# ATTRIBUTES
+
+## Variables managing colors
+
+# METHODS
+
+## new:
+Constructor initialize a Dict::Controller object
+
+## update\_pattern:
+sets the current search term in the reqular expression pattern
+for the offline search
+
+## runInteractive:
+Handle the interacitve mode, represents a read eval print loop
+for the specific dictcmd commands.
+It runs a prompt with the following Layout = dictcmd:<mode>:<input\_language>
+
+## parse\_commands:
+Updates object attributes if they should be changed because of controll
+command input in interactive mode
+
+## start;
+This method represents the evaluation of the modes
+
+## handle\_threads:
+ Thread handling routine here we start two threads, one for the offline
+ request and another for the online request. The master-thread will wait
+ until one of them is joinable, then he takes the result of the thread and
+ calls the routines for output. The he waits until the second thread is ready
+ too.
+
+## output:
+ Calls the subroutines to getting a nice output
+
+## sort\_precise;
+ Sorts the results by the shortest first.
+
+## prettry\_printer;
+ This subroutine deletes some ugly features in the list.
+
+## online\_mode:
+ Triggers the certain subroutines to make the online request
+ Returns the list which will be returned by the module.
+
+## offline\_mode:
+ takes the handle of the offline resource at first
+ triggers the search routines from Dictcmd.pm, getting
+ a list which contains the results.
+ Returns the list which will be returned by the module.
+
+## print\_results:
+ Formatted output of the results, not perfect but readable
+ without eyebleeding
+
+# AUTHOR
+
+blastmaster <oeste.sebastian@googlemail.com> [![endorse](http://api.coderwall.com/blastmaster/endorsecount.png)](http://coderwall.com/blastmaster)
+
+# COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2012 by blastmaster.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
