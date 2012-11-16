@@ -20,12 +20,12 @@ our @EXPORT = qw(
 
 # ABSTRACT: Ressource module for offline search
 
-=attr
+=attr filename:
  setting offline resource
 =cut
 our $filename = "$HOME/.dictcmd/".FILE;
 
-=method take_the_file_content
+=method take_the_file_content:
  Reads the whole file given by a filehandle
  line by line in a list.
  Returns a reference to that list.
@@ -43,7 +43,7 @@ sub take_the_file_content($)
 	return \@content_list;
 }
 
-=method getting_offline_ressource
+=method getting_offline_ressource:
  open the offline resource
  returns the filehandle
 =cut
@@ -54,7 +54,7 @@ sub getting_offline_resource
 	return $handle;
 }
 
-=method seach_word
+=method run:
  Given scalar parameter is a regular expression.
  The subroutine will search after that in special file.
  Returns a list with the results were the parameter matched.
